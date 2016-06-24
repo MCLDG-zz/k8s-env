@@ -1,1 +1,1 @@
-watch -n 1 curl -s a46c3bbb139c011e6b5a306f0d16fb15-536085077.us-west-2.elb.amazonaws.com 
+watch -n 1 curl -s a443592f139e211e6a2bb060d7c0d6d9-1572670216.us-west-2.elb.amazonaws.com 
