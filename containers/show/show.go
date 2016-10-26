@@ -24,6 +24,10 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"time"
+
+	"github.com/garyburd/redigo/redis"
+	"github.com/soveran/redisurl"
 )
 
 func getKubeEnv() (map[string]string, error) {
@@ -65,10 +69,16 @@ func printInfo(resp http.ResponseWriter, req *http.Request) {
 	name := os.Getenv("POD_NAME")
 	namespace := os.Getenv("POD_NAMESPACE")
         podip := os.Getenv("POD_IP")
-	fmt.Fprintf(resp, "Application version: v4 \n")
+	fmt.Fprintf(resp, "Application version: v7 \n")
 	fmt.Fprintf(resp, "Pod Name: %v \n", name)
 	fmt.Fprintf(resp, "Pod Namespace: %v \n", namespace)
 	fmt.Fprintf(resp, "Pod IP: %v \n", podip)
+
+	/* Get and display secrets */	
+	uname := os.Getenv("SECRET_USERNAME")
+	pwd := os.Getenv("SECRET_PASSWORD")
+	fmt.Fprintf(resp, "SECRET_USERNAME: %v \n", uname)
+	fmt.Fprintf(resp, "SECRET_PASSWORD: %v \n", pwd)
 
 	envvar := os.Getenv("USER_VAR")
 	fmt.Fprintf(resp, "USER_VAR: %v \n", envvar)
@@ -93,6 +103,39 @@ func printInfo(resp http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
+	started := time.Now()
 	http.HandleFunc("/", printInfo)
-	log.Fatal(http.ListenAndServe(":8080", nil))
+
+        http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+                duration := time.Now().Sub(started)
+                w.WriteHeader(200)
+		w.Write([]byte(fmt.Sprintf("ok. Alive for duration(s): %v", duration.Seconds())))
+        })
+        http.HandleFunc("/poststart", func(w http.ResponseWriter, r *http.Request) {
+                w.WriteHeader(200)
+                w.Write([]byte("Post-start invoked"))
+        })
+        http.HandleFunc("/prestop", func(w http.ResponseWriter, r *http.Request) {
+                w.WriteHeader(200)
+                w.Write([]byte("Cleaning up before stopping"))
+        })
+	http.HandleFunc("/redisincr", func(w http.ResponseWriter, r *http.Request) {
+                w.WriteHeader(200)
+                w.Write([]byte("redisincr invoked"))
+
+
+		// Now we connect to the Redis server
+		conn, err := redisurl.ConnectToURL("redis://aml-rg-redis-001.8yizaq.0001.usw2.cache.amazonaws.com")
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+                defer conn.Close()
+
+                w.Write([]byte("redisincr - connected to Redis"))
+		n, err := conn.Do("INCR", "aml-counter")
+		w.Write([]byte(fmt.Sprintf("redisincr after INCR: %v", n)))
+	})
+
+        log.Fatal(http.ListenAndServe(":8080", nil))
 }

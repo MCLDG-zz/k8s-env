@@ -1,1 +1,4 @@
 kubernetes
+secret.yaml
+sematext-key.yaml
+MyKeyPair.pem

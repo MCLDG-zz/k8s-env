@@ -14,11 +14,25 @@ spec:
     spec:
       containers:
       - name: show-container
-        image: 185711092606.dkr.ecr.us-west-2.amazonaws.com/cpa/aml_k8s-env_front:v4
+        image: 185711092606.dkr.ecr.us-west-2.amazonaws.com/cpa/aml_k8s-env_front:v8
         imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            httpHeaders:
+              - name: X-Custom-Header
+                value: Awesome
+          initialDelaySeconds: 15
+          timeoutSeconds: 1
         ports:
         - containerPort: 8080
           protocol: TCP
+        lifecycle:
+          preStop:
+            httpGet:
+                path: /prestop
+                port: 8080
         env:
         - name: USER_VAR
           value: important information
@@ -34,4 +48,21 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: status.podIP
+        - name: SECRET_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: username
+        - name: SECRET_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysecret
+              key: password
+        volumeMounts:
+        - name: aws-store
+          mountPath: /var/lib/data/aws
+      volumes:
+      - name: aws-store
+        persistentVolumeClaim:
+          claimName: aws-pvc
 

@@ -5,7 +5,7 @@ An application that can be run on Kubernetes on Amazon or Google Cloud that show
 Is useful for showing load balancing and phased rollouts
 
 <h3>Pre-requisites</h3>
-You'll need a Kubernetes cluster running on AWS. Instructions to create one are here: http://kubernetes.io/docs/getting-started-guides/aws/ or here: http://kubernetes.io/docs/admin/multiple-zones/ (for multi-zone clusters)
+You'll need a Kubernetes cluster running on AWS. Make sure your AWS config and credentials points to the region where you want to create the Kubernetes cluster. Instructions to create one are here: http://kubernetes.io/docs/getting-started-guides/aws/ or here: http://kubernetes.io/docs/admin/multiple-zones/ (for multi-zone clusters)
 
 Access to the Docker registry on AWS, and the repositories storing the Docker images:
 cpa/aml_k8s-env_front
